@@ -1,7 +1,4 @@
 Workflow Automation Projects
-<img width="2286" height="851" alt="image" src="https://github.com/user-attachments/assets/70face4d-3443-4eca-b71e-5d92d26d288d" />
-AI - Daily Newsletter
-
 
 Welcome to my automation portfolio. This repository showcases my hands-on projects using self-hosted infrastructure and AI agents to solve operational bottlenecks.
 Instead of relying on simple integrations, my goal is to practice building modular and reliable systems.
