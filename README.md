@@ -9,9 +9,8 @@ Instead of relying on simple integrations, my goal is to practice building modul
 ## 🛠 Tech Stack & Infrastructure
 * **Core Orchestration:** n8n (Self-hosted via Docker)
 * **AI & LLMs:** Google Gemini, Groq (Llama/Qwen)
-* **Media Processing:** FFmpeg (CLI integration)
+* **Media Processing:** FFmpeg 
 * **Integrations:** YouTube API, Google Drive API, Telegram Bots, Webhooks, Pexels API
-* **Data Parsing:** Custom JavaScript code nodes, RSS parsing, Regex
 
 ---
 
