@@ -1,0 +1,86 @@
+{
+  "name": "Tool – AI Web News",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "targetDate"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "51dad429-7155-41de-a33a-8eafad9a0fd4",
+      "name": "Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=\"artificial+intelligence\"+OR+AI&hl=en-US&gl=US&ceid=US:en",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "7e0e871d-82fc-4e6a-af53-819d11f16ab8",
+      "name": "RSS Google News AI"
+    },
+    {
+      "parameters": {
+        "jsCode": "const targetDate = $('Trigger').item.json.targetDate; // YYYY-MM-DD\n\nconst normalized = items\n  .map(i => i.json)\n  .filter(entry => {\n    const pub = entry.isoDate || entry.pubDate || '';\n    return pub.startsWith(targetDate);\n  })\n  .map(entry => ({\n    title: entry.title || '',\n    url: entry.link || '',\n    source: entry.feedTitle || entry.creator || 'Google News',\n    publishedAt: entry.isoDate || entry.pubDate || null,\n    snippet: entry.contentSnippet || ''\n  }));\n\nreturn [{ json: { items: normalized } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "250265c5-864a-44ab-95d9-a8967d024118",
+      "name": "Filter & Normalize"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Google News AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Google News AI": {
+      "main": [
+        [
+          {
+            "node": "Filter & Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "17fba56f-70c2-44df-9a7f-39d12086e57c",
+  "meta": {
+    "instanceId": "30febd20915fae049620e2150d9edb6d79b9d332a16d876ac686c73696aa0ae1"
+  },
+  "id": "62zwsEp6rCNaHypI",
+  "tags": []
+}

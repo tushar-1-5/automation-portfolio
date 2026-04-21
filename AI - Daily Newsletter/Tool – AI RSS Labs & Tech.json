@@ -1,0 +1,210 @@
+{
+  "name": "Tool – AI RSS Labs & Tech",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "targetDate"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c00b88b9-31ec-4a2e-983b-bb1596409e0a",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "url": "https://openai.com/news/rss.xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        -112
+      ],
+      "id": "efc064f3-5481-4b57-ba52-764cec2a09e3",
+      "name": "RSS OpenAI",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://blog.google/technology/ai/rss/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        144
+      ],
+      "id": "28dc677c-7539-4b29-8fb9-cf6e0844a55b",
+      "name": "RSS Google AI",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/tag/artificial-intelligence/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        -288
+      ],
+      "id": "2a348b3e-350c-4a53-b3f7-f30ca5991d3a",
+      "name": "RSS TechCrunch AI"
+    },
+    {
+      "parameters": {
+        "url": "https://www.theverge.com/rss/index.xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        320
+      ],
+      "id": "d54bf0cd-0cbf-428f-81a7-70b01499444b",
+      "name": "RSS The Verge AI"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        656,
+        0
+      ],
+      "id": "71684877-0d1b-4146-90a8-315ef7c311e3",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tool – AI RSS Labs & Tech\n// This node runs AFTER \"Merge\" and prepares clean, filtered RSS items\n// for the AI Agent.\n//\n// It does three things:\n// 1) Reads the date passed from the orchestrator via the trigger\n// 2) Takes all merged RSS items from the previous node\n// 3) Filters to that date, normalizes fields, removes errors & duplicates\n\n// 1) Try to get the target date from the trigger\nlet targetDate = '';\n\ntry {\n  const triggerItems = $items('When Executed by Another Workflow') || [];\n  if (triggerItems.length > 0 && triggerItems[0].json) {\n    const t = triggerItems[0].json;\n    // Call n8n Workflow Tool usually passes { input: \"YYYY-MM-DD\" }\n    targetDate = t.input || t.targetDate || '';\n  }\n} catch (e) {\n  // If the trigger isn't available (e.g. manual node execution),\n  // we just leave targetDate empty and skip date filtering.\n  targetDate = '';\n}\n\n// 2) Get all merged RSS entries from the previous node\n// (the node connected directly before this Code node)\nconst mergedItems = $items(); // items from \"Merge\"\n\n// 3) Normalize & filter\nconst MAX_ITEMS = 20;\nconst seen = new Set();\nconst normalized = [];\n\nfor (const item of mergedItems) {\n  const entry = item.json || {};\n\n  // Skip error placeholders like { error: \"Status code 404\" }\n  if (entry.error) continue;\n\n  const rawDate =\n    entry.isoDate ||\n    entry.pubDate ||\n    entry.pubdate ||\n    entry.published ||\n    '';\n\n  const dateOnly = rawDate.slice(0, 10); // \"YYYY-MM-DD\"\n\n  // If we have a targetDate, keep only items from that date\n  if (targetDate && dateOnly !== targetDate) {\n    continue;\n  }\n\n  const title = entry.title || '';\n  const url = entry.link || entry.guid || '';\n  const source =\n    entry.feedTitle ||\n    entry.creator ||\n    entry.source ||\n    'RSS Labs & Tech';\n\n  if (!title || !url) continue;\n\n  // Simple de-duplication by title+url\n  const dedupeKey = `${title}::${url}`;\n  if (seen.has(dedupeKey)) continue;\n  seen.add(dedupeKey);\n\n  normalized.push({\n    title,\n    url,\n    source,\n    publishedAt: rawDate || null,\n    snippet: entry.contentSnippet || entry.summary || '',\n  });\n\n  if (normalized.length >= MAX_ITEMS) break;\n}\n\n// 4) Return in the shape the AI Agent expects\nreturn normalized.map(obj => ({ json: obj }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        32
+      ],
+      "id": "eb796d58-b587-4277-93c4-7591bf848504",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "targetDate": "2025-11-18"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "RSS OpenAI",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS Google AI",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS TechCrunch AI",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS The Verge AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "RSS Google AI": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "RSS TechCrunch AI": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS The Verge AI": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "544ff0ac-1837-46fd-8864-23ac7c20d407",
+  "meta": {
+    "instanceId": "30febd20915fae049620e2150d9edb6d79b9d332a16d876ac686c73696aa0ae1"
+  },
+  "id": "Q3yz5m187OK3I8i9",
+  "tags": []
+}

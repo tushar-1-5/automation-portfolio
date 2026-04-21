@@ -1,0 +1,86 @@
+{
+  "name": "Tool – AI Financial News",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "targetDate"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "fd1339a9-89ef-4d42-a12a-5e5f220353bc",
+      "name": "Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=(\"artificial+intelligence\"+OR+AI)+(\"stock\"+OR+\"earnings\"+OR+\"market\"+OR+\"chips\"+OR+\"semiconductor\")&hl=en-US&gl=US&ceid=US:en",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "e009151a-0cd4-4d86-9678-dbd4730a7cbb",
+      "name": "RSS Google News Finance"
+    },
+    {
+      "parameters": {
+        "jsCode": "const targetDate = $('Trigger').item.json.targetDate;\n\nconst normalized = items\n  .map(i => i.json)\n  .filter(entry => {\n    const pub = entry.isoDate || entry.pubDate || '';\n    return pub.startsWith(targetDate);\n  })\n  .map(entry => ({\n    title: entry.title || '',\n    url: entry.link || '',\n    source: entry.feedTitle || entry.creator || 'Finance News',\n    publishedAt: entry.isoDate || entry.pubDate || null,\n    snippet: entry.contentSnippet || ''\n  }));\n\nreturn [{ json: { items: normalized } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "6b0f80f1-60f7-4b0c-8249-cd3c43851504",
+      "name": "Filter & Normalize"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Google News Finance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Google News Finance": {
+      "main": [
+        [
+          {
+            "node": "Filter & Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "25ba4d5e-ed9e-4711-b180-b32e1a4897cf",
+  "meta": {
+    "instanceId": "30febd20915fae049620e2150d9edb6d79b9d332a16d876ac686c73696aa0ae1"
+  },
+  "id": "TxrkT1GONSCLltZ5",
+  "tags": []
+}

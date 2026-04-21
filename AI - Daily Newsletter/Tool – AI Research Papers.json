@@ -1,0 +1,116 @@
+{
+  "name": "Tool – AI Research Papers",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "triggerDate"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ff0294cb-915d-4740-9d51-e91341c2a67c",
+      "name": "Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://export.arxiv.org/api/query?search_query=cat:cs.AI+OR+cat:cs.LG+OR+cat:stat.ML&sortBy=submittedDate&sortOrder=descending&max_results=40",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "2627bcad-bea4-4f96-a8e3-a68d5e6096bc",
+      "name": "Get arXiv"
+    },
+    {
+      "parameters": {
+        "jsCode": "function main() {\n  if (!items.length) {\n    return [];\n  }\n\n  // After XML node: XML string in `data` is now JSON\n  const root = items[0].json;\n\n  // Be defensive about where `feed` lives\n  const feed =\n    root.feed ||\n    root.data?.feed ||\n    root.data ||\n    root;\n\n  if (!feed || !feed.entry) {\n    return [];\n  }\n\n  const entriesRaw = feed.entry;\n  const entries = Array.isArray(entriesRaw) ? entriesRaw : [entriesRaw];\n\n  const getText = (obj, key) => {\n    if (!obj || obj[key] === undefined) return '';\n    const v = obj[key];\n\n    if (typeof v === 'string') return v;\n\n    if (Array.isArray(v)) {\n      const first = v[0];\n      if (typeof first === 'string') return first;\n      if (first && typeof first === 'object') return first._ || '';\n      return '';\n    }\n\n    if (typeof v === 'object' && v !== null) {\n      return v._ || '';\n    }\n\n    return '';\n  };\n\n  const newItems = entries.map((entry) => {\n    const title = getText(entry, 'title').replace(/\\s+/g, ' ').trim();\n    const summary = getText(entry, 'summary').replace(/\\s+/g, ' ').trim();\n    const id = getText(entry, 'id');\n\n    // Links\n    let url = '';\n    const linksRaw = entry.link || [];\n    const links = Array.isArray(linksRaw) ? linksRaw : [linksRaw];\n\n    if (links.length > 0) {\n      const htmlLink = links.find((l) => {\n        const attrs = l.$ || {};\n        const rel = attrs.rel;\n        const type = attrs.type;\n\n        const relOk = !rel || rel === 'alternate';\n        const typeOk = !type || String(type).includes('text/html');\n\n        return relOk && typeOk;\n      });\n\n      const first = links[0];\n      url = htmlLink?.$?.href || first?.$?.href || id;\n    } else {\n      url = id;\n    }\n\n    // Dates\n    const publishedRaw =\n      getText(entry, 'published') || getText(entry, 'updated');\n    const publishedAt = publishedRaw || null;\n\n    // Tags from category + primary_category\n    const tags = [];\n\n    if (entry.category) {\n      const cats = Array.isArray(entry.category)\n        ? entry.category\n        : [entry.category];\n\n      for (const c of cats) {\n        const term = c.$?.term || getText(c, 'term');\n        if (term && !tags.includes(term)) tags.push(term);\n      }\n    }\n\n    if (entry['arxiv:primary_category']) {\n      const prims = Array.isArray(entry['arxiv:primary_category'])\n        ? entry['arxiv:primary_category']\n        : [entry['arxiv:primary_category']];\n\n      for (const c of prims) {\n        const term = c.$?.term;\n        if (term && !tags.includes(term)) tags.push(term);\n      }\n    }\n\n    // Authors\n    const authors = [];\n    if (entry.author) {\n      const auths = Array.isArray(entry.author)\n        ? entry.author\n        : [entry.author];\n\n      for (const a of auths) {\n        let name = '';\n        if (a.name) {\n          const v = a.name;\n          if (typeof v === 'string') {\n            name = v;\n          } else if (Array.isArray(v)) {\n            const first = v[0];\n            if (typeof first === 'string') name = first;\n            else if (first && typeof first === 'object') name = first._ || '';\n          } else if (typeof v === 'object') {\n            name = v._ || '';\n          }\n        }\n        name = (name || '').trim();\n        if (name) authors.push(name);\n      }\n    }\n\n    return {\n      json: {\n        id: id || url,\n        title,\n        url,\n        summary,\n        publishedAt,\n        source: 'arXiv',\n        tags,\n        authors,\n        // Optional: if your downstream expects a channel\n        // channel: 'ai_research_papers',\n      },\n    };\n  });\n\n  return newItems;\n}\n\nreturn main();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "6ad1cae1-2315-40fb-a260-2d30a78a0bdd",
+      "name": "Parse & Normalize"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "fa45f807-a007-4aba-b8ec-10772a2c0361",
+      "name": "XML"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get arXiv",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get arXiv": {
+      "main": [
+        [
+          {
+            "node": "XML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "XML": {
+      "main": [
+        [
+          {
+            "node": "Parse & Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b89b2851-94cc-49d8-9d39-57fe349043f3",
+  "meta": {
+    "instanceId": "30febd20915fae049620e2150d9edb6d79b9d332a16d876ac686c73696aa0ae1"
+  },
+  "id": "DiLCg1nTstqyQMis",
+  "tags": []
+}

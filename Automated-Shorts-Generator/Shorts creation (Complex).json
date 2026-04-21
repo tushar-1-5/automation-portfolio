@@ -1,0 +1,1040 @@
+{
+  "name": "Shorts creation (Complex)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "48abb62c-19c9-4979-91f5-89d173cf2211",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        976,
+        2256
+      ],
+      "id": "615b152c-d869-468d-b4fd-09e93e505df1",
+      "name": "wait for files"
+    },
+    {
+      "parameters": {
+        "name": "output.mp4",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "16MBOnO37Gm3Jek1Z4Yxd1EvuYDx03yJP",
+          "mode": "list",
+          "cachedResultName": "n8n Part 5 23-10-2025",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/16MBOnO37Gm3Jek1Z4Yxd1EvuYDx03yJP"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2112,
+        2272
+      ],
+      "id": "0ee0eeb8-fa9c-4866-9206-f7db58781a3e",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Qy5QXlYEmUYkXLgT",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileSelector": "output.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        2144
+      ],
+      "id": "adcec80d-a0eb-4aa2-8163-80a98ae9e929",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $json.text.split('\\n')[0] }}",
+        "regionCode": "IN",
+        "categoryId": "=",
+        "options": {
+          "description": "={{ $json.text }}\\n\\n#Shorts",
+          "tags": "={{ [\n  \"Shorts\",\n  \"Motivation\",\n  \"Quotes\",\n  \"Mindset\",\n  \"Inspiration\",\n  \"Success\",\n  \"Aesthetic\",\n  \"Stoic\",\n  \"Viral\",\n  \"Trending\",\n  \"DeepThoughts\",\n  ($json.text.split('\\n\\n- ')[1] || '').replace(/\\s+/g, '')\n].join(',') }}"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        2464
+      ],
+      "id": "0b894b52-f077-440b-b660-a5b064462a90",
+      "name": "Upload a video"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1840,
+        2368
+      ],
+      "id": "34ad55c9-9893-4f71-8310-220b88457911",
+      "name": "Merge for Upload"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Start",
+        "options": {
+          "systemMessage": "=You are a creative assistant. Your goal is to find a single, high-quality, portrait image for a video.\n\nWhen you receive the prompt \"Start\", you must follow these instructions:\n\n1.  Randomly choose one query from this exact list:\n    * `roman statue`\n    * `brotherhood dark`\n    * `lion`\n    * `men in suit attitude`\n2.  After choosing a query, use the \"Tool: Search Pexels\" and pass your chosen query as the `query` parameter.\n3.  Return ONLY a JSON object with the photo's URL. The URL must be the 'portrait' size.\n\nExample output:\n{\"image_url\": \"https://images.pexels.com/photos/12345/some-image-portrait.jpg\"}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ab09c025-e7f7-4480-8260-f046b9c1f590",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        320
+      ],
+      "id": "58598409-826c-4b10-8dd7-67a1633d8bcc",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gKhJg8ae8htFLa46",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.pexels.com/v1/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', ``, 'string') }}"
+            },
+            {
+              "name": "orientation",
+              "value": "portrait"
+            },
+            {
+              "name": "per_page",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "response": {}
+        }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        32,
+        320
+      ],
+      "id": "9eb82de7-5bf5-4382-8e19-1dd32b01d7cd",
+      "name": "Tool: Search Pexels",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O7WSalMPZUp64RQw",
+          "name": "Pexels"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "=mimeType != 'application/vnd.google-apps.folder' and '1ffCkioQhSVQuV9G96gQcdcz3mT9JPcop' in parents",
+        "returnAll": true,
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        208,
+        320
+      ],
+      "id": "0ac30778-611c-4eec-a895-70fcbe8416b8",
+      "name": "Tool: List Songs",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Qy5QXlYEmUYkXLgT",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('File', ``, 'string') }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        336,
+        320
+      ],
+      "id": "6c0908cb-d9bb-41e7-8566-df998d9c950a",
+      "name": "Tool: Download Song",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Qy5QXlYEmUYkXLgT",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ JSON.parse($json.output).image_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        560,
+        0
+      ],
+      "id": "d9b9ab94-d997-4b76-9224-21a448298645",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "color_input.jpg",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        768,
+        0
+      ],
+      "id": "aa87bdb6-230c-4736-929a-454f786b9a22",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "command": "ffmpeg -i color_input.jpg -vf \"hue=s=0\" grayscale_output.jpg -y"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        976,
+        0
+      ],
+      "id": "f049aff7-e45f-448f-8b8f-c9e8d57d6e12",
+      "name": "Execute Command"
+    },
+    {
+      "parameters": {
+        "fileSelector": "grayscale_output.jpg",
+        "options": {
+          "fileName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1184,
+        192
+      ],
+      "id": "a238a262-32f4-4d9b-aaa8-300ad3f04f36",
+      "name": "Read/Write Files from Disk2"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        192
+      ],
+      "id": "84c75e65-9095-4310-b2f2-a6ae5e769142",
+      "name": "Telegram (Send Photo)",
+      "webhookId": "f25dcc48-fb68-4e9c-a9d3-e8ee635bcd8c",
+      "credentials": {
+        "telegramApi": {
+          "id": "Zut4cyNkG52ynfdu",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "message": "Approve this image?",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1600,
+        192
+      ],
+      "id": "4c517838-d2bc-420d-8c4a-e03855595944",
+      "name": "Telegram (Wait for Approval)",
+      "webhookId": "80bb0a81-00d3-48d1-bc23-551da46a6731",
+      "credentials": {
+        "telegramApi": {
+          "id": "Zut4cyNkG52ynfdu",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "06d4b40a-5717-4aa4-a763-f157fe5713d0",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        272
+      ],
+      "id": "ab5808ab-9c9a-4d96-9031-d904373f3d74",
+      "name": "Check Image Approval"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Start analysis",
+        "options": {
+          "systemMessage": "=You are a creative director. An image has been provided. Your goal is to choose a matching song and write a powerful, short caption for it.\n\nWhen you receive the prompt \"Start analysis\", you must follow these instructions:\n\n1.  **Analyze the Image:** First, analyze the provided grayscale image to understand its mood (e.g., stoic, powerful, dark, soulful).\n2.  **Analyze Songs:** Use the \"Tool: List Songs\" to get the list of all available songs, their file names, and their file IDs.\n3.  **Choose Song:** Choose the song file name (e.g., \"dark.mp3\") that best matches the image's mood. Get its file ID.\n4.  **Write Caption:** Write one short, powerful caption (2-3 lines) that matches the image and song mood.\n\nReturn ONLY a JSON object with your choices. Do not add any other text.\n{\"song_name\": \"...\", \"song_id\": \"...\", \"caption\": \"...\"}",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        928,
+        624
+      ],
+      "id": "1a7790eb-d762-475a-b280-3e335b9422b2",
+      "name": "AI Agent - Get Content"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        608,
+        624
+      ],
+      "id": "d10759ba-b780-4e92-a2ba-72078666dc9a",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "message": "=I've selected this song: {{ $json.output.song_name }}\\n\\nHere is the proposed caption:\\n\"{{ $json.output.caption }}\"\\n\\nDo you approve this caption?",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        624
+      ],
+      "id": "cd98a152-783b-40d1-9cf3-88703bfa99d0",
+      "name": "Send message and wait for response",
+      "webhookId": "1b0da329-7cf9-4114-9fe4-7582e93dce95",
+      "credentials": {
+        "telegramApi": {
+          "id": "Zut4cyNkG52ynfdu",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e040fc37-fd34-40eb-aed7-effb93015e26",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1488,
+        848
+      ],
+      "id": "08a3162b-d19f-4e25-a1a2-fbd3dfcd1eab",
+      "name": "Check Caption Approval"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json[0].json.output.song_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1952,
+        816
+      ],
+      "id": "ec4ea94b-3080-4870-b816-ea6bf6f98f9a",
+      "name": "Download Approved Song",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Qy5QXlYEmUYkXLgT",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "input.mp3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        816
+      ],
+      "id": "2e9ce384-2e68-4b48-9b64-2d22409f93cc",
+      "name": "Write Song (input.mp3)"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "input.jpg",
+        "dataPropertyName": "={{ $json[0].data }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        1024
+      ],
+      "id": "5bdf1288-52dd-43c6-bce6-7c7b5fe46a84",
+      "name": "Write Image (input.jpg)"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1744,
+        816
+      ],
+      "id": "4e692256-8e96-4512-b7bf-5db41474d757",
+      "name": "Final Merge"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2688,
+        384
+      ],
+      "id": "90324ea1-02b8-438c-b2d9-f61bae6254a7",
+      "name": "Wait for Files"
+    },
+    {
+      "parameters": {
+        "command": "=ffmpeg -loop 1 -i input.jpg -i input.mp3 -t 6 -vf \"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,drawtext=text='{{$json.text.replace(/\\\\\\\\/g,'\\\\\\\\\\\\\\\\')}}':fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:fontsize=48:fontcolor=white:borderw=2:bordercolor=black:line_spacing=10:x=(w-text_w)/2:y=(h-text_h)/2,fade=t=in:st=0:d=2\" -af \"afade=t=in:st=0:d=2\" -c:v libx264 -preset veryslow -crf 17 -c:a aac -b:a 320k -pix_fmt yuv420p -shortest -movflags +faststart output.mp4 -y"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        2144
+      ],
+      "id": "f78b1457-3ab0-4257-a5fe-daa93c75cb65",
+      "name": "Create Video (ffmpeg)2",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "command": "=ffmpeg -loop 1 -i input.jpg -i input.mp3 -vf \"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,drawtext=text='{{ $json[2].json[0].json.output.caption.replace(/'/g, \"\") }}':fontfile='C\\\\:/Windows/Fonts/arialbd.ttf':fontsize=48:fontcolor=white:borderw=2:bordercolor=black:line_spacing=10:x=(w-text_w)/2:y=(h-text_h)/2,fade=t=in:st=0:d=2\" -af \"afade=t=in:st=0:d=2\" -c:v libx264 -preset veryslow -crf 17 -c:a aac -b:a 320k -pix_fmt yuv420p -shortest -movflags +faststart output.mp4 -y"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        2896,
+        400
+      ],
+      "id": "aaa00c1f-240a-419a-910c-e5b0c50205ca",
+      "name": "Create Video (ffmpeg)"
+    },
+    {
+      "parameters": {
+        "fileSelector": "output.mp4",
+        "options": {
+          "dataPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        3104,
+        400
+      ],
+      "id": "76791447-1d97-45d6-828a-56f0600702d0",
+      "name": "Read Final Video (output.mp4"
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "16MBOnO37Gm3Jek1Z4Yxd1EvuYDx03yJP",
+          "mode": "list",
+          "cachedResultName": "n8n Part 5 23-10-2025",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/16MBOnO37Gm3Jek1Z4Yxd1EvuYDx03yJP"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3312,
+        400
+      ],
+      "id": "a02b280c-4bc5-4d03-b2fe-4e89496fd801",
+      "name": "Upload file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Qy5QXlYEmUYkXLgT",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-11-07T06:18:28.005-05:00",
+          "Readable date": "November 7th 2025, 6:18:28 am",
+          "Readable time": "6:18:28 am",
+          "Day of week": "Friday",
+          "Year": "2025",
+          "Month": "November",
+          "Day of month": "07",
+          "Hour": "06",
+          "Minute": "18",
+          "Second": "28",
+          "Timezone": "America/New_York (UTC-05:00)"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait for files": {
+      "main": [
+        [
+          {
+            "node": "Create Video (ffmpeg)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Merge for Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge for Upload": {
+      "main": [
+        [
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Get Content",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool: Search Pexels": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool: List Songs": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Get Content",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool: Download Song": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk2": {
+      "main": [
+        [
+          {
+            "node": "Telegram (Send Photo)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram (Send Photo)": {
+      "main": [
+        [
+          {
+            "node": "Telegram (Wait for Approval)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram (Wait for Approval)": {
+      "main": [
+        [
+          {
+            "node": "Check Image Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Image Approval": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Get Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Get Content": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Final Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "Check Caption Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Caption Approval": {
+      "main": [
+        [
+          {
+            "node": "Final Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "AI Agent - Get Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Approved Song": {
+      "main": [
+        [
+          {
+            "node": "Write Song (input.mp3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Merge": {
+      "main": [
+        [
+          {
+            "node": "Download Approved Song",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Write Image (input.jpg)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait for Files",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Write Song (input.mp3)": {
+      "main": [
+        [
+          {
+            "node": "Wait for Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Image (input.jpg)": {
+      "main": [
+        [
+          {
+            "node": "Wait for Files",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Wait for Files": {
+      "main": [
+        [
+          {
+            "node": "Create Video (ffmpeg)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Video (ffmpeg)2": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Video (ffmpeg)": {
+      "main": [
+        [
+          {
+            "node": "Read Final Video (output.mp4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Final Video (output.mp4": {
+      "main": [
+        [
+          {
+            "node": "Upload file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9d0e5755-127f-48e2-9b05-133e43835461",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "30febd20915fae049620e2150d9edb6d79b9d332a16d876ac686c73696aa0ae1"
+  },
+  "id": "IAQECEQbG6avHeBy",
+  "tags": []
+}

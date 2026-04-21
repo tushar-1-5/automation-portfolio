@@ -1,0 +1,424 @@
+{
+  "name": "Shorts Creation (Easy)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -3088,
+        -368
+      ],
+      "id": "dceb08df-ffa8-4ba4-b6d1-804ed598b5f4",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://zenquotes.io/api/random",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -2880,
+        -368
+      ],
+      "id": "8ac576e9-57d6-40ec-ae25-63ac2858daa6",
+      "name": "Get Quote"
+    },
+    {
+      "parameters": {
+        "url": "https://drive.google.com/uc?export=download&id=1XeP9ZjlNd9tzNiL_6fjRDAr1TDmo8yNR",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -2816,
+        -128
+      ],
+      "id": "1b25d7a0-02be-4675-a297-c84085254153",
+      "name": "Get Background Music"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "input.mp3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -2560,
+        -128
+      ],
+      "id": "9441517e-5801-410c-a1a8-492e2d7231fd",
+      "name": "Write Music to Disk"
+    },
+    {
+      "parameters": {
+        "command": "=ffmpeg -loop 1 -i input.jpg -i input.mp3 -t 6 -vf \"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,drawtext=text='{{$json.text.replace(/\\\\\\\\/g,'\\\\\\\\\\\\\\\\')}}':fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:fontsize=48:fontcolor=white:borderw=2:bordercolor=black:line_spacing=10:x=(w-text_w)/2:y=(h-text_h)/2,fade=t=in:st=0:d=2\" -af \"afade=t=in:st=0:d=2\" -c:v libx264 -preset veryslow -crf 17 -c:a aac -b:a 320k -pix_fmt yuv420p -shortest -movflags +faststart output.mp4 -y"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -1760,
+        -128
+      ],
+      "id": "f61f45de-14b4-425d-a4e0-99eafb265511",
+      "name": "Create Video (ffmpeg)",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6346f2ae-3b01-45d5-83cc-ca9194a88596",
+              "name": "text",
+              "value": "={{ $json.q.replace(/'/g,'').replace(/(.{1,25})(\\s+|$)/g,'$1\\n') + \"\\n\\n- \" + $json.a.replace(/'/g,'') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2672,
+        -368
+      ],
+      "id": "28841303-27be-4752-8cd4-45a07a9ee7f0",
+      "name": "Set Text"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -2160,
+        -16
+      ],
+      "id": "b74f9fad-f170-47f2-8837-896b69fbef6a",
+      "name": "wait for files"
+    },
+    {
+      "parameters": {
+        "name": "output.mp4",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_DRIVE_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "n8n Part 5 23-10-2025",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_GOOGLE_DRIVE_FOLDER_ID"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1040,
+        32
+      ],
+      "id": "a32a2cfe-b04f-42e1-9bf2-60b583553c09",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Qy5QXlYEmUYkXLgT",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileSelector": "output.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -1552,
+        -128
+      ],
+      "id": "e63cdbc3-62b6-40ce-aacd-341b2e9171c5",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "url": "https://drive.google.com/uc?export=download&id=1ITObEDTIPOAguGSpiltJ-_oceyOQfagY",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -2464,
+        -368
+      ],
+      "id": "f58191b8-aaad-4148-8a6e-4d0ceb0dc118",
+      "name": "Get Background Image"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "input.jpg",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -2048,
+        -368
+      ],
+      "id": "a33a602d-95b3-43b2-9af2-5b6affe6d5bb",
+      "name": "Write Image to Disk"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $json.text.split('\\n')[0] }}",
+        "regionCode": "IN",
+        "categoryId": "=",
+        "options": {
+          "description": "={{ $json.text }}\\n\\n#Shorts",
+          "tags": "={{ [\n  \"Shorts\",\n  \"Motivation\",\n  \"Quotes\",\n  \"Mindset\",\n  \"Inspiration\",\n  \"Success\",\n  \"Aesthetic\",\n  \"Stoic\",\n  \"Viral\",\n  \"Trending\",\n  \"DeepThoughts\",\n  ($json.text.split('\\n\\n- ')[1] || '').replace(/\\s+/g, '')\n].join(',') }}"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        192
+      ],
+      "id": "8d74abb6-6211-4606-9570-e339bc1575f0",
+      "name": "Upload a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "FXKRbfxVxjH8zqq6",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1312,
+        96
+      ],
+      "id": "cc3c0e1d-f79a-475a-a3a5-f2242a53630a",
+      "name": "Merge for Upload"
+    }
+  ],
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-11-07T06:18:28.005-05:00",
+          "Readable date": "November 7th 2025, 6:18:28 am",
+          "Readable time": "6:18:28 am",
+          "Day of week": "Friday",
+          "Year": "2025",
+          "Month": "November",
+          "Day of month": "07",
+          "Hour": "06",
+          "Minute": "18",
+          "Second": "28",
+          "Timezone": "America/New_York (UTC-05:00)"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Quote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Quote": {
+      "main": [
+        [
+          {
+            "node": "Set Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Background Music": {
+      "main": [
+        [
+          {
+            "node": "Write Music to Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Music to Disk": {
+      "main": [
+        [
+          {
+            "node": "wait for files",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Set Text": {
+      "main": [
+        [
+          {
+            "node": "Get Background Music",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "wait for files",
+            "type": "main",
+            "index": 2
+          },
+          {
+            "node": "Get Background Image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge for Upload",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "wait for files": {
+      "main": [
+        [
+          {
+            "node": "Create Video (ffmpeg)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Video (ffmpeg)": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Merge for Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Background Image": {
+      "main": [
+        [
+          {
+            "node": "Write Image to Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Image to Disk": {
+      "main": [
+        [
+          {
+            "node": "wait for files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge for Upload": {
+      "main": [
+        [
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "67fd2794-00a8-40f5-ad22-3a455b0e589e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "30febd20915fae049620e2150d9edb6d79b9d332a16d876ac686c73696aa0ae1"
+  },
+  "id": "AThkjXnuPyibATdF",
+  "tags": []
+}

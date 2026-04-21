@@ -1,0 +1,1044 @@
+{
+  "name": "AI Daily – Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -416,
+        0
+      ],
+      "id": "fa3cb264-ac18-42c8-92a5-e672dee809a4",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\n\n// yesterday\nconst y = new Date(now);\ny.setDate(now.getDate() - 1);\n\nconst pad = n => n.toString().padStart(2, '0');\n\nconst year = y.getFullYear();\nconst month = pad(y.getMonth() + 1);\nconst day = pad(y.getDate());\n\nconst dateStr = `${year}-${month}-${day}`;\n\n// IST timestamps\nconst start = `${dateStr}T00:00:00+05:30`;\nconst end   = `${dateStr}T23:59:59+05:30`;\n\nreturn [{\n  json: {\n    yesterdayDate: dateStr,\n    yesterdayStart: start,\n    yesterdayEnd: end,\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        0
+      ],
+      "id": "cf331665-0803-4195-8844-71254a06daa6",
+      "name": "Set Yesterday"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create the newsletter items for this batch.\n\nDATA TO PROCESS:\n{{ $json.items }}\n\nINSTRUCTIONS:\n\nOnly use the data provided above.\n\nConvert these items into a series of HTML <li> items.\n\nFor each item, include:\n\nA linked title: <a href=\"URL\"><strong>TITLE</strong></a>\n\nA 3-4 sentence summary.\n\nThe source: <em>Source: SOURCE_NAME</em>.\n\nDo not add any introductory text, concluding text, or <h1> titles.\n\nIf no data is provided in this batch, return an empty string.",
+        "options": {
+          "systemMessage": "=You are a professional AI Newsletter Editor. Transform the provided news items into a sectioned HTML newsletter.\n\nMANDATORY RULES:\n1. CATEGORY HEADERS: Detect the 'source' or topic. Start each new category with an <h2> title (e.g., <h2>AI Web News</h2>).\n2. ITEM STRUCTURE: Wrap items in <ul> tags. Each <li> MUST include:\n   <a href=\"URL\"><strong>TITLE</strong></a><br/>\n   A 3-4 sentence summary.<br/>\n   <em>Source: SOURCE_NAME</em>\n3. SPACING: Add a <br/> after each </li> for vertical breathing room.\n4. OUTPUT: Provide ONLY raw HTML. No Markdown fences (```), no <html> or <body> tags.\n\n5. CONTENT LIMITS:\n- Summarize accurately and concisely.\n- Use ONLY the provided data. Do not add external knowledge or \"Intro/Outro\" text.\n",
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1968,
+        480
+      ],
+      "id": "a1c61c7d-2eee-4c15-a0b2-491923a1ee03",
+      "name": "AI Agent – Build Newsletter",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        320,
+        848
+      ],
+      "id": "2595be63-66e6-4934-bd03-7eb9707f72a8",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gKhJg8ae8htFLa46",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Q3yz5m187OK3I8i9",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Q3yz5m187OK3I8i9",
+          "cachedResultName": "Tool – AI RSS Labs & Tech"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "targetDate": "={{ $('Set Yesterday').item.json.yesterdayDate }}"
+          },
+          "matchingColumns": [
+            "targetDate"
+          ],
+          "schema": [
+            {
+              "id": "targetDate",
+              "displayName": "targetDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        -1200
+      ],
+      "id": "998aa285-0ce4-4b4b-b2c7-f272f3ec3c2a",
+      "name": "Call 'Tool – AI RSS Labs & Tech'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "62zwsEp6rCNaHypI",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/62zwsEp6rCNaHypI",
+          "cachedResultName": "Tool – AI Web News"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "targetDate": "={{ $('Set Yesterday').item.json.yesterdayDate }}"
+          },
+          "matchingColumns": [
+            "targetDate"
+          ],
+          "schema": [
+            {
+              "id": "targetDate",
+              "displayName": "targetDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        -1040
+      ],
+      "id": "225fc20a-b69d-44ce-bd80-86ba97cb65a3",
+      "name": "Call 'Tool – AI Web News'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "DiLCg1nTstqyQMis",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/DiLCg1nTstqyQMis",
+          "cachedResultName": "Tool – AI Research Papers"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "triggerDate": "={{ $('Set Yesterday').item.json.yesterdayDate }}"
+          },
+          "matchingColumns": [
+            "triggerDate"
+          ],
+          "schema": [
+            {
+              "id": "triggerDate",
+              "displayName": "triggerDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1168,
+        -1200
+      ],
+      "id": "cf237d2e-8b0b-444c-87cd-2dda12f31301",
+      "name": "Call 'Tool – AI Research Papers'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TxrkT1GONSCLltZ5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/TxrkT1GONSCLltZ5",
+          "cachedResultName": "Tool – AI Financial News"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "targetDate": "={{ $('Set Yesterday').item.json.yesterdayDate }}"
+          },
+          "matchingColumns": [
+            "targetDate"
+          ],
+          "schema": [
+            {
+              "id": "targetDate",
+              "displayName": "targetDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1024,
+        -1200
+      ],
+      "id": "06247c20-0578-4aec-93ca-6682efef3db6",
+      "name": "Call 'Tool – AI Financial News'"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a9740524-b08e-4249-81a4-63ecb35cf01e",
+              "name": "=subject",
+              "value": "={{ 'AI - Daily' + $json.yesterdayDate}}",
+              "type": "string"
+            },
+            {
+              "id": "16877e6a-b67a-4817-b927-f420837f60cd",
+              "name": "bodyHtml",
+              "value": "={{ $json.finalHtml }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2160,
+        272
+      ],
+      "id": "4a705d35-4f50-42be-903b-70204bf6b1e1",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@DOMAIN.COM",
+        "subject": "={{$json.subject}}",
+        "message": "={{$json.bodyHtml}}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2448,
+        272
+      ],
+      "id": "75b53394-347e-42f0-95c6-1b73f273afb0",
+      "name": "Send Newsletter",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ZDkVSBZPmY6b5WD1",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// This code takes the two HTML parts and joins them perfectly\nconst items = $input.all();\n\n// Extract the output from Part 1 and Part 2\nconst part1 = items[0].json.output || \"\";\nconst part2 = items[1].json.output || \"\";\n\n// Join them with a clean divider\nconst finalNewsletter = `\n  ${part1}\n  <hr style=\"border: 0; height: 1px; background: #eeeeee; margin: 20px 0;\">\n  ${part2}\n`;\n\nreturn [{\n  json: {\n    output: finalNewsletter\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        -960
+      ],
+      "id": "c09e3d8e-9d83-434f-836f-b465bde063ed",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@DOMAIN.COM",
+        "subject": "={{$json.subject}}",
+        "message": "={{$json.bodyHtml}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2448,
+        464
+      ],
+      "id": "3533e254-de28-4b30-81c5-3791f6f7de56",
+      "name": "Send a message",
+      "webhookId": "cadd4d74-add3-46ac-8be6-ce2e5ecaebf3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ZDkVSBZPmY6b5WD1",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3-32b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        528
+      ],
+      "id": "b9ceb92b-c260-4731-adcd-0865cac0800d",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "yYZq79u3VuncaoP0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Score these items. Return only the JSON array.\n\nDATA:\n{{ JSON.stringify($input.all().map(i => ({ id: i.json.url, t: i.json.title.substring(0, 80) }))) }}",
+        "options": {
+          "systemMessage": "=You are a News Importance Scorer. Rank news on a scale of 0-100.\n\nScoring Key:\n- 90-100: Major breakthroughs/moves (OpenAI, Nvidia, Anthropic).\n- 70-89: Significant updates or major funding.\n- 40-69: General industry news or research papers.\n- 0-39: Routine posts or tech fluff.\n\nInput uses 't' for Title and 's' for Source. Evaluate 't'.\n\nOutput Rule:\nReturn ONLY a JSON array of objects: [{\"id\": \"...\", \"importanceScore\": 95}]. \nNo conversational text, no markdown, no code fences.",
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        896,
+        288
+      ],
+      "id": "a1258406-1470-4cf6-92ca-e0fd9602c101",
+      "name": "AI Agent – Build Newsletter1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        704,
+        320
+      ],
+      "id": "9d77a4ce-5203-460e-936a-65223ef529d0",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "VRYxdnTotnV9wx4E",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1904,
+        -960
+      ],
+      "id": "40590e73-0cd3-472c-b2eb-d081cfff333f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "batchSize": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1680,
+        288
+      ],
+      "id": "a6e16fe9-77a5-4438-80cd-6aa59195377c",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Q3yz5m187OK3I8i9",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Q3yz5m187OK3I8i9",
+          "cachedResultName": "Tool – AI RSS Labs & Tech"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "targetDate": "={{ $json.yesterdayDate }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "targetDate",
+              "displayName": "targetDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        -320
+      ],
+      "id": "7ed44bb2-155b-4654-bae3-926341d4a336",
+      "name": "Call 'Tool – AI RSS Labs & Tech'1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "DiLCg1nTstqyQMis",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/DiLCg1nTstqyQMis",
+          "cachedResultName": "Tool – AI Research Papers"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "triggerDate": "={{ $json.yesterdayDate }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "triggerDate",
+              "displayName": "triggerDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        -96
+      ],
+      "id": "3a0c144d-a662-405f-8196-47ddb3f4d6ea",
+      "name": "Call 'Tool – AI Research Papers'1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TxrkT1GONSCLltZ5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/TxrkT1GONSCLltZ5",
+          "cachedResultName": "Tool – AI Financial News"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "targetDate": "={{ $json.yesterdayDate }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "targetDate",
+              "displayName": "targetDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        128
+      ],
+      "id": "b2a59b7c-8a1e-4236-bae5-a2c635d52c16",
+      "name": "Call 'Tool – AI Financial News'1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "62zwsEp6rCNaHypI",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/62zwsEp6rCNaHypI",
+          "cachedResultName": "Tool – AI Web News"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "targetDate": "={{ $json.yesterdayDate }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "targetDate",
+              "displayName": "targetDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        304
+      ],
+      "id": "a120a6dc-dd7e-40b4-9d5c-33d5916c4a28",
+      "name": "Call 'Tool – AI Web News'1"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        32
+      ],
+      "id": "8324aff4-a316-4c9c-92d3-0d3884daee69",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\n\n// Join all the HTML chunks from the AI Agent iterations\nconst htmlContent = allItems.map(item => item.json.output).join('\\n');\n\nreturn [{\n  json: {\n    finalHtml: `\n<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: auto; color: #333;\">\n  <h1 style=\"color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px;\">AI RSS Labs & Tech – Daily Briefing</h1>\n  ${htmlContent}\n</div>`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        272
+      ],
+      "id": "26eb1c2e-563a-455a-bb54-ee445e7227dd",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\n\n// yesterday\nconst y = new Date(now);\ny.setDate(now.getDate() - 1);\n\nconst pad = n => n.toString().padStart(2, '0');\n\nconst year = y.getFullYear();\nconst month = pad(y.getMonth() + 1);\nconst day = pad(y.getDate());\n\nconst dateStr = `${year}-${month}-${day}`;\n\n// IST timestamps\nconst start = `${dateStr}T00:00:00+05:30`;\nconst end   = `${dateStr}T23:59:59+05:30`;\n\nreturn [{\n  json: {\n    yesterdayDate: dateStr,\n    yesterdayStart: start,\n    yesterdayEnd: end,\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        80
+      ],
+      "id": "7178c2dc-f791-4af3-abd5-f4b7d6a4f327",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "maxItems": 25
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        -112
+      ],
+      "id": "59e574b1-449d-44f3-9481-3ce99c14209d",
+      "name": "Limit1"
+    },
+    {
+      "parameters": {
+        "batchSize": 50,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        656,
+        32
+      ],
+      "id": "610184cf-1e21-4a9f-b49a-3a4449b08b85",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get all the scored batches from the loop\nconst items = $input.all();\n\n// 2. The Agent output a JSON array inside a string, we need to flatten it\nlet allScores = [];\nitems.forEach(item => {\n  // Extract the array from the Agent's output\n  const batchScores = item.json.output || [];\n  allScores = allScores.concat(batchScores);\n});\n\n// 3. Match scores back to the original full news data\n// We'll do this in the next step using a Merge node, \n// for now, let's just make sure we have the scores ready.\nreturn allScores.map(score => ({ json: score }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        16
+      ],
+      "id": "f75a7e11-bdb3-4cab-bd62-4d68e0006981",
+      "name": "Finalize Scores"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "url",
+              "field2": "id"
+            }
+          ]
+        },
+        "options": {
+          "multipleMatches": "all"
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1232,
+        -112
+      ],
+      "id": "895dc0e5-baf3-4f4e-98f3-029a7bc21ba4",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "importanceScore",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        -112
+      ],
+      "id": "1f1ac759-63f4-41d8-8b9a-0466134c043c",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 752,
+        "width": 1248,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1520,
+        32
+      ],
+      "typeVersion": 1,
+      "id": "f7d626b4-28db-4f65-a8f0-2038d634bdbb",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Yesterday",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Yesterday": {
+      "main": [
+        [
+          {
+            "node": "Call 'Tool – AI RSS Labs & Tech'1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call 'Tool – AI Research Papers'1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call 'Tool – AI Financial News'1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call 'Tool – AI Web News'1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Call 'Tool – AI RSS Labs & Tech'": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Call 'Tool – AI Web News'": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Call 'Tool – AI Research Papers'": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Call 'Tool – AI Financial News'": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "AI Agent – Build Newsletter": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send Newsletter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent – Build Newsletter",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent – Build Newsletter1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent – Build Newsletter1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent – Build Newsletter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Tool – AI RSS Labs & Tech'1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Tool – AI Research Papers'1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Call 'Tool – AI Financial News'1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Call 'Tool – AI Web News'1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Finalize Scores",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent – Build Newsletter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalize Scores": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Limit1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "04db6f03-38c6-4fb1-a96a-1a233f084658",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "30febd20915fae049620e2150d9edb6d79b9d332a16d876ac686c73696aa0ae1"
+  },
+  "id": "n3hP1AWmre5CGMBX",
+  "tags": []
+}
