@@ -4,6 +4,9 @@
 A modular automation system designed to eliminate manual research and curation. This pipeline aggregates specific RSS feeds across Tech and Finance, filters them by date, and uses AI agents to score their importance before generating a categorized HTML newsletter.
 
 
+<img width="2286" height="851" alt="Screenshot 2026-04-21 191620" src="https://github.com/user-attachments/assets/4d5ebab5-8270-4282-97c5-182e3890b936" />
+
+
 ## 🏗 Architecture & Logic
 Rather than building one massive, unmaintainable workflow, this system is broken down into an **Orchestrator** and reusable **Tools**:
 
